@@ -1,7 +1,8 @@
 # Fluxis
-Fluxis is a Discord selfbot for extending GDMs
+Fluxis is a Discord selfbot that can be used to extend GDMs.
+
 > [!WARNING]
-> Fluxis uses Discord selfbots, which are against Discord's ToS! I am not responsible if your account gets banned
+> Fluxis uses Discord selfbots, which are against Discord's ToS! I am not liable if your account gets banned.
 
 ## Setup
 ```sh
@@ -10,12 +11,7 @@ cd fluxis
 pnpm i
 ```
 
-Copy `config.example.json` to `config.json` and fill in your details (see Config section below). Once that's done:
-
-```sh
-pnpm start
-```
-
+Copy `config.example.json` to `config.json`, and fill in your details.
 ### Config
 config.json:
 ```jsonc
@@ -33,17 +29,19 @@ config.json:
 }
 ```
 
+Once that is done:
+
+```sh
+pnpm start
+```
 ### Discord
-Add the selfbot account to both GCs. You could use your account but because selfbots are against ToS I recommend using a separate account. I also recommend making the selfbot account the owner of the 2nd/other GC
+Add your selfbot account to both of the group chats that you are trying to bridge. Making a second account isn't required, but I highly advise you DO NOT use your main account as selfbots are against Discord's ToS. It is safer to create an alternative Discord account to use as the selfbot. It is recommended to not make the selfbot the owner of the second group chat, just in case the account gets either suspended or terminated.
 
 To get channel IDs: Enable Developer Mode in Discord (User Settings > Advanced > Developer Mode), then right-click on the group chat and click "Copy Channel ID".
 
-Your setup should look like this:
-- GC #1: The selfbot is just a regular member
-- GC #2: The selfbot is the owner (create a new GC with the bot account if needed)
+The selfbot should be present as a regular member in both group chats (ownership is not required).
 
-Once the bot is running, messages sent in GC #1 will forward to GC #2 and vice versa.
-
+Once the bot is running, messages sent in GC #1 will be forwarded to GC #2, and vice versa.
 ## Commands
 Using $fx as the prefix:
 ```
@@ -64,15 +62,14 @@ $fx stop - Stop the bot (owner only)
 - Deleting & editing messages
 - Replies
 - Reactions
-- Pinning / unpinning
+- Pinning / unpinning messages
 - People being added/removed from a GC
 - Changing GC icon or name
 
-### What doesn't work?
-TL;DR: Nitro features (unless the selfbot user has Nitro)
-- If a file size is over 10MB, instead of re-uploading the attachment, it'll paste the CDN link in the message instead
-- Nitro emojis (if selfbot is in same server as the source it'll work)
-- Nitro stickers (see above)
+### What features don't work?
+TL;DR: Nitro features (unless the user hosting the selfbot has Nitro).
+- Currently, the bot forwards message attachments by copying them directly. If an attachment exceeds 10MB, the bot will not re-upload it and will instead include the original message's CDN link.
+- Nitro emojis (if the selfbot is in same server as the source, it'll work)
 
 ### Murky areas
-- Of course, calls don't work. However, messages get sent if a call is started and ended
+- As expected, calls are unable to work using the selfbot. However, messages will be sent if a call is both started and ended.
