@@ -59,3 +59,59 @@ export function getGcKey(channelId: string): GcKey | null {
 
     return null;
 }
+
+async function sendDmToOwner(message: string): Promise<void> {
+    if (!config.debug_to_dms) return;
+    
+    try {
+        const owner = await client.users.fetch(config.owner_id);
+        const dmChannel = await owner.createDM();
+        
+        const truncatedMessage = message.length > 1900 
+            ? message.substring(0, 1900) + '...' 
+            : message;
+        
+        await dmChannel.send(`\`\`\`\n${truncatedMessage}\n\`\`\``);
+    } catch { }
+}
+
+export function consoleDmFwding(): void {
+    if (!config.debug_to_dms) return;
+    
+    const originalLog = console.log;
+    const originalError = console.error;
+    const originalWarn = console.warn;
+    const originalInfo = console.info;
+    
+    console.log = (...args: any[]) => {
+        originalLog(...args);
+        const message = args.map(arg => 
+            typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+        ).join(' ');
+        sendDmToOwner(`[LOG] ${message}`).catch(() => {});
+    };
+    
+    console.error = (...args: any[]) => {
+        originalError(...args);
+        const message = args.map(arg => 
+            typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+        ).join(' ');
+        sendDmToOwner(`[ERROR] ${message}`).catch(() => {});
+    };
+    
+    console.warn = (...args: any[]) => {
+        originalWarn(...args);
+        const message = args.map(arg => 
+            typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+        ).join(' ');
+        sendDmToOwner(`[WARN] ${message}`).catch(() => {});
+    };
+    
+    console.info = (...args: any[]) => {
+        originalInfo(...args);
+        const message = args.map(arg => 
+            typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+        ).join(' ');
+        sendDmToOwner(`[INFO] ${message}`).catch(() => {});
+    };
+}

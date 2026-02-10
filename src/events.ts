@@ -1,7 +1,7 @@
 import type { MessageOptions } from './types';
 import type { Message, VoiceState } from 'discord.js-selfbot-v13';
 import { client, lastSender, activeVoiceCalls } from './state';
-import { isOurGc, getOtherGcId, sendToOtherGc, sendToAllGcs } from './utils';
+import { isOurGc, getOtherGcId, sendToOtherGc, sendToAllGcs, consoleDmFwding } from './utils';
 import { handleCommand } from './commands';
 import { forwardMessage } from './forwarding';
 
@@ -13,6 +13,9 @@ export function setupEventHandlers(): void {
 
 async function onReady(): Promise<void> {
     console.log(`[DEBUG] Logged in as ${client.user?.tag}`);
+    
+    // Setup console DM forwarding if enabled
+    consoleDmFwding();
     
     try {
         await sendToAllGcs('[SYSTEM] started!');

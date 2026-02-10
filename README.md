@@ -18,6 +18,7 @@ config.json:
 {
     "token": "YOUR_DISCORD_TOKEN_HERE", // Discord token of the selfbot user you want to use
     "prefix": "$fx",
+    "debug_to_dm": true, // Send all console calls to owners DMs
     "owner_id": "YOUR_USER_ID_HERE", // Your user ID
     "gc": {
         "1": "FIRST_GROUP_CHANNEL_ID", // GC channel ID #1

@@ -1,9 +1,10 @@
-import type { MessageOptions, MessageEmbed } from 'discord.js-selfbot-v13';
+import type { MessageOptions } from 'discord.js-selfbot-v13';
 
 export interface Config {
     token: string;
     prefix: string;
     owner_id: string;
+    debug_to_dms: boolean;
     gc: {
         1: string;
         2: string;

@@ -1,6 +1,7 @@
 {
     "token": "YOUR_DISCORD_TOKEN_HERE",
     "prefix": "$fx",
+    "debug_to_dm": true,
     "owner_id": "YOUR_USER_ID_HERE",
     "gc": {
         "1": "FIRST_GROUP_CHANNEL_ID",
