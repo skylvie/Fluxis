@@ -8,7 +8,11 @@ Fluxis is a Discord selfbot for extending GDMs
 git clone https://github.com/skylvie/fluxis
 cd fluxis
 pnpm i
-# setup config.json
+```
+
+Copy `config.example.json` to `config.json` and fill in your details (see Config section below). Once that's done:
+
+```sh
 pnpm start
 ```
 
@@ -30,7 +34,15 @@ config.json:
 ```
 
 ### Discord
-Add the selfbot account to both GCs, and it just works! You could do it on your main account as well but I don't recommend doing this because selfbots are against Discord's ToS and you could be banned. **MAKE SURE THE BOT OWNS THE 2ND GC!**
+Add the selfbot account to both GCs. You could use your account but because selfbots are against ToS I recommend using a separate account. I also recommend making the selfbot account the owner of the 2nd/other GC
+
+To get channel IDs: Enable Developer Mode in Discord (User Settings > Advanced > Developer Mode), then right-click on the group chat and click "Copy Channel ID".
+
+Your setup should look like this:
+- GC #1: The selfbot is just a regular member
+- GC #2: The selfbot is the owner (create a new GC with the bot account if needed)
+
+Once the bot is running, messages sent in GC #1 will forward to GC #2 and vice versa.
 
 ## Commands
 Using $fx as the prefix:
