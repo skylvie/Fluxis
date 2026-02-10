@@ -41,15 +41,21 @@ $fx update - Checks for updates
 
 ## Support
 - **ALL** types of messages
-- Forwards
+- Forwarded messages
 - Stickers
 - Attachments (videos, photos, etc.)
 - Voice messages
-- Deleting and editing messages
+- Deleting & editing messages
 - Replies
+- Pinning / unpinning
+- People being added/removed from a GC
+- Changing GC icon or name
 
 ### What doesn't work?
 TLDR: Nitro features (assuming the bot doesn't have Nitro, because you shouldn't waste $10/m on this)
 - If a file size is over 10MB, instead of re-uploading the attachment it'll psate the CDN link in the message instead
 - Nitro emojis
 - Nitro stickers
+
+### Murky areas
+- Of course, calls don't work. However, messages get sent if a call is started and ended

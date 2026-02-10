@@ -3,6 +3,7 @@ import type { Message } from 'discord.js-selfbot-v13';
 import { config } from './config';
 import { client, forwardedMessages, lastSender } from './state';
 import { getDisplayName } from './utils';
+import { saveCache } from './cache';
 
 const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
 
@@ -165,6 +166,7 @@ export async function forwardMessage(message: Message, otherGcId: string): Promi
             
             forwardedMessages.set(message.id, messageData);
             forwardedMessages.set(sentMessage.id, messageData);
+            saveCache();
         }
     } catch (err) {
         console.error('Failed to forward message from', message.channelId, 'to', otherGcId, ':', err);
@@ -197,6 +199,7 @@ export async function deleteForwardedMessage(message: Message): Promise<void> {
             
             forwardedMessages.delete(message.id);
             forwardedMessages.delete(otherMessageId);
+            saveCache();
         }
     } catch (err) {
         console.error('Failed to delete forwarded message:', err);
@@ -258,5 +261,57 @@ export async function updateForwardedMessage(newMessage: Message): Promise<void>
         await messageToEdit.edit(newContent || ' ');
     } catch (err) {
         console.error('Failed to update forwarded message:', err);
+    }
+}
+
+export async function pinForwardedMessage(message: Message): Promise<void> {
+    try {
+        const messageData = forwardedMessages.get(message.id);
+        if (!messageData) return;
+        
+        const currentGcKey: GcKey = message.channelId === config.gc['1'] ? '1' : '2';
+        const otherGcKey: GcKey = currentGcKey === '1' ? '2' : '1';
+        const otherGcId = config.gc[otherGcKey];
+        
+        const otherMessageId = messageData[otherGcKey];
+        if (!otherMessageId) return;
+        
+        const otherChannel = await client.channels.fetch(otherGcId);
+        if (!otherChannel?.isText()) return;
+        
+        const messageToPin = await otherChannel.messages.fetch(otherMessageId);
+        
+        if (!messageToPin.pinned) {
+            await messageToPin.pin();
+            console.log(`Pinned message ${otherMessageId} in ${otherGcId}`);
+        }
+    } catch (err) {
+        console.error('Failed to pin forwarded message:', err);
+    }
+}
+
+export async function unpinForwardedMessage(message: Message): Promise<void> {
+    try {
+        const messageData = forwardedMessages.get(message.id);
+        if (!messageData) return;
+        
+        const currentGcKey: GcKey = message.channelId === config.gc['1'] ? '1' : '2';
+        const otherGcKey: GcKey = currentGcKey === '1' ? '2' : '1';
+        const otherGcId = config.gc[otherGcKey];
+        
+        const otherMessageId = messageData[otherGcKey];
+        if (!otherMessageId) return;
+        
+        const otherChannel = await client.channels.fetch(otherGcId);
+        if (!otherChannel?.isText()) return;
+        
+        const messageToUnpin = await otherChannel.messages.fetch(otherMessageId);
+        
+        if (messageToUnpin.pinned) {
+            await messageToUnpin.unpin();
+            console.log(`Unpinned message ${otherMessageId} in ${otherGcId}`);
+        }
+    } catch (err) {
+        console.error('Failed to unpin forwarded message:', err);
     }
 }

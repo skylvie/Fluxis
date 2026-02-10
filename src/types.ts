@@ -4,6 +4,7 @@ export interface Config {
     token: string;
     prefix: string;
     owner_id: string;
+    cache_to_file: boolean;
     debug_to_dms: boolean;
     gc: {
         1: string;

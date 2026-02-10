@@ -1,9 +1,21 @@
 import type { MessageOptions } from './types';
 import type { Message, VoiceState, PartialMessage } from 'discord.js-selfbot-v13';
 import { client, lastSender, activeVoiceCalls } from './state';
-import { isOurGc, getOtherGcId, sendToOtherGc, sendToAllGcs, consoleDmFwding } from './utils';
+import { isOurGc,
+    getOtherGcId,
+    sendToOtherGc,
+    sendToAllGcs,
+    consoleDmFwding
+} from './utils';
 import { handleCommand } from './commands';
-import { forwardMessage, deleteForwardedMessage, updateForwardedMessage } from './forwarding';
+import { 
+    forwardMessage, 
+    deleteForwardedMessage, 
+    updateForwardedMessage, 
+    pinForwardedMessage, 
+    unpinForwardedMessage
+} from './forwarding';
+import { loadCache, startAutoSave } from './cache';
 
 export function setupEventHandlers(): void {
     client.once('ready', onReady);
@@ -16,7 +28,10 @@ export function setupEventHandlers(): void {
 async function onReady(): Promise<void> {
     console.log(`Logged in as ${client.user?.tag}`);
     consoleDmFwding();
-    
+
+    loadCache();
+    startAutoSave();
+
     try {
         await sendToAllGcs('[SYSTEM] started!');
         console.log('Startup messages sent!');
@@ -27,29 +42,29 @@ async function onReady(): Promise<void> {
 
 async function onMessageCreate(message: Message): Promise<void> {
     if (message.author.id === client.user?.id) return;
-    
+
 
     const isCommand = await handleCommand(message);
     if (isCommand) return;
-    
+
     if (!isOurGc(message.channelId)) return;
-    
+
     const otherGcId = getOtherGcId(message.channelId);
     if (!otherGcId) return;
-    
+
     lastSender.delete(message.channelId);
 
     if (message.type !== 'DEFAULT' && message.type !== 'REPLY') {
         await handleSystemMessage(message);
         return;
     }
-    
+
     await forwardMessage(message, otherGcId);
 }
 
 async function onMessageDelete(message: Message | PartialMessage): Promise<void> {
     if (!message.channelId || !isOurGc(message.channelId)) return;
-    
+
     if (message.partial) {
         try {
             await message.fetch();
@@ -57,7 +72,7 @@ async function onMessageDelete(message: Message | PartialMessage): Promise<void>
             return;
         }
     }
-    
+
     await deleteForwardedMessage(message as Message);
 }
 
@@ -65,9 +80,9 @@ async function onMessageUpdate(
     oldMessage: Message | PartialMessage,
     newMessage: Message | PartialMessage
 ): Promise<void> {
-    if (!newMessage.channelId || !isOurGc(newMessage.channelId)) return;  
+    if (!newMessage.channelId || !isOurGc(newMessage.channelId)) return;
     if (newMessage.author?.id === client.user?.id) return;
-    
+
     try {
         if (oldMessage.partial) {
             await oldMessage.fetch();
@@ -79,15 +94,26 @@ async function onMessageUpdate(
         console.error('Failed to fetch messages for update:', err);
         return;
     }
-    
-    await updateForwardedMessage(newMessage as Message);
+
+    const oldMsg = oldMessage as Message;
+    const newMsg = newMessage as Message;
+
+    if (oldMsg.pinned !== newMsg.pinned) {
+        if (newMsg.pinned) {
+            await pinForwardedMessage(newMsg);
+        } else {
+            await unpinForwardedMessage(newMsg);
+        }
+    }
+
+    await updateForwardedMessage(newMsg);
 }
 
 async function handleSystemMessage(message: Message): Promise<void> {
     try {
         const authorName = message.author.displayName || message.author.username;
         let systemMessage = '';
-        
+
         switch (message.type) {
             case 'CHANNEL_NAME_CHANGE':
                 if (message.content) {
@@ -95,11 +121,11 @@ async function handleSystemMessage(message: Message): Promise<void> {
                 }
 
                 break;
-            
+
             case 'CHANNEL_ICON_CHANGE':
                 systemMessage = `[SYSTEM] ${authorName} (<@${message.author.id}>) changed the other GC icon`;
                 break;
-            
+
             case 'RECIPIENT_ADD':
                 if (message.mentions.users.size > 0) {
                     const addedUser = message.mentions.users.first();
@@ -110,14 +136,14 @@ async function handleSystemMessage(message: Message): Promise<void> {
                     }
                 }
                 break;
-            
+
             case 'RECIPIENT_REMOVE':
                 if (message.mentions.users.size > 0) {
                     const removedUser = message.mentions.users.first();
 
                     if (removedUser) {
                         const removedName = removedUser.displayName || removedUser.username;
-                        
+
                         if (removedUser.id === message.author.id) {
                             systemMessage = `[SYSTEM] ${authorName} (<@${message.author.id}>) left the other GC`;
                         } else {
@@ -126,7 +152,7 @@ async function handleSystemMessage(message: Message): Promise<void> {
                     }
                 }
                 break;
-            
+
             case 'CALL':
                 systemMessage = `[SYSTEM] ${authorName} (<@${message.author.id}>) started a VC`;
 
@@ -137,7 +163,7 @@ async function handleSystemMessage(message: Message): Promise<void> {
 
                 return;
         }
-        
+
         if (systemMessage) {
             await sendToOtherGc(message.channelId, systemMessage);
         }
@@ -149,10 +175,10 @@ async function handleSystemMessage(message: Message): Promise<void> {
 async function onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState): Promise<void> {
     const channelId = newState.channelId || oldState.channelId;
     if (!channelId || !isOurGc(channelId)) return;
-    
+
     const wasInCall = oldState.channelId === channelId;
     const isInCall = newState.channelId === channelId;
-    
+
     if (wasInCall && !isInCall) {
         const channel = await client.channels.fetch(channelId);
         if (!channel) return;
@@ -176,7 +202,7 @@ async function onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState): P
                         console.error('[ERROR] Failed to send VC ended message:', err);
                     }
                 }
-                
+
                 activeVoiceCalls.delete(channelId);
             }, 1000);
         }
