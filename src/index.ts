@@ -2,7 +2,7 @@ import { client, setShuttingDown } from './state';
 import { config } from './config';
 import { setupEventHandlers } from './events';
 import { sendToAllGcs } from './utils';
-import { saveCache, stopAutoSave } from './cache';
+import { saveCache } from './cache';
 
 setupEventHandlers();
 
@@ -10,7 +10,7 @@ process.on('SIGINT', async () => {
     setShuttingDown(true);
     console.log('[DEBUG] Shutting down...');
 
-    stopAutoSave();
+
     saveCache();
     console.log('Cache saved on shutdown');
     

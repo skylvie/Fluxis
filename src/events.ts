@@ -15,7 +15,7 @@ import {
     pinForwardedMessage, 
     unpinForwardedMessage
 } from './forwarding';
-import { loadCache, startAutoSave } from './cache';
+import { loadCache, saveCache } from './cache';
 
 export function setupEventHandlers(): void {
     client.once('ready', onReady);
@@ -30,7 +30,6 @@ async function onReady(): Promise<void> {
     consoleDmFwding();
 
     loadCache();
-    startAutoSave();
 
     try {
         await sendToAllGcs('[SYSTEM] started!');
@@ -53,10 +52,25 @@ async function onMessageCreate(message: Message): Promise<void> {
     if (!otherGcId) return;
 
     lastSender.delete(message.channelId);
+    saveCache();
 
     if (message.type !== 'DEFAULT' && message.type !== 'REPLY') {
         await handleSystemMessage(message);
         return;
+    }
+
+    const content = message.content.toLowerCase();
+    if (
+        content.includes('clink') ||
+        content.includes('clank') ||
+        content.includes('clanker') ||
+        message.content.includes('🤖')
+    ) {
+        try {
+            await message.reply('whatd you call me');
+        } catch (err) {
+            console.error('Failed to reply:', err);
+        }
     }
 
     await forwardMessage(message, otherGcId);
@@ -160,6 +174,7 @@ async function handleSystemMessage(message: Message): Promise<void> {
                 const sentMessage = await sendToOtherGc(message.channelId, systemMessage);
                 if (sentMessage) {
                     activeVoiceCalls.set(message.channelId, sentMessage.id);
+                    saveCache();
                 }
 
                 return;
@@ -205,6 +220,7 @@ async function onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState): P
                 }
 
                 activeVoiceCalls.delete(channelId);
+                saveCache();
             }, 1000);
         }
     }

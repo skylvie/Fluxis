@@ -2,7 +2,7 @@ import type { Message } from 'discord.js-selfbot-v13';
 import { config } from './config';
 import { client, startTime, setShuttingDown } from './state';
 import { sendToAllGcs } from './utils';
-import { saveCache, stopAutoSave } from './cache';
+import { saveCache } from './cache';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 
@@ -107,7 +107,6 @@ async function stopCmd(message: Message): Promise<void> {
         setShuttingDown(true);
         await message.reply('Stopping bot...');
         
-        stopAutoSave();
         saveCache();
         console.log('[CACHE] Cache saved before stop');
         
@@ -134,7 +133,6 @@ async function restartCmd(message: Message): Promise<void> {
         setShuttingDown(true);
         await message.reply('Restarting bot...');
         
-        stopAutoSave();
         saveCache();
         console.log('[CACHE] Cache saved before restart');
         

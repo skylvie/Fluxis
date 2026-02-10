@@ -34,6 +34,7 @@ export async function forwardMessage(message: Message, otherGcId: string): Promi
                     await otherChannel.send(forwardHeader);
                     await referencedMsg.forward(otherChannel);
                     lastSender.set(otherGcId, message.author.id);
+                    saveCache();
                 }
             } catch (err) {
                 const displayName = getDisplayName(message);
@@ -49,6 +50,7 @@ export async function forwardMessage(message: Message, otherGcId: string): Promi
         const headerText = shouldShowHeader ? `-# ${displayName} (<@${message.author.id}>) said:` : '';
         
         lastSender.set(otherGcId, message.author.id);
+        saveCache();
         
         let replyToMessageId: string | undefined;
 

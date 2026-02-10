@@ -68,27 +68,3 @@ export function saveCache(): void {
         console.error('[CACHE] Failed to save cache:', err);
     }
 }
-
-let autoSaveInterval: NodeJS.Timeout | null = null;
-
-export function startAutoSave(): void {
-    if (!config.cache_to_file) {
-        return;
-    }
-
-    if (autoSaveInterval) {
-        clearInterval(autoSaveInterval);
-    }
-
-    autoSaveInterval = setInterval(() => {
-        saveCache();
-        console.log('[CACHE] Auto-saved cache');
-    }, 5 * 60 * 1000); // 5 minutes
-}
-
-export function stopAutoSave(): void {
-    if (autoSaveInterval) {
-        clearInterval(autoSaveInterval);
-        autoSaveInterval = null;
-    }
-}
