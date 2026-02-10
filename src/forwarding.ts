@@ -5,7 +5,7 @@ import { client, forwardedMessages, lastSender } from './state';
 import { getDisplayName } from './utils';
 import { saveCache } from './cache';
 
-const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
+const MAX_ATTACHMENT_SIZE = config.has_nitro ? 500 * 1024 * 1024 : 10 * 1024 * 1024;
 
 export async function forwardMessage(message: Message, otherGcId: string): Promise<void> {
     try {

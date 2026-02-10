@@ -52,10 +52,10 @@ $fx update - Checks for updates
 - Changing GC icon or name
 
 ### What doesn't work?
-TLDR: Nitro features (assuming the bot doesn't have Nitro, because you shouldn't waste $10/m on this)
-- If a file size is over 10MB, instead of re-uploading the attachment it'll psate the CDN link in the message instead
-- Nitro emojis
-- Nitro stickers
+TLDR: Nitro features (unless the selfbot user has Nitro)
+- If a file size is over 10MB, instead of re-uploading the attachment it'll paste the CDN link in the message instead
+- Nitro emojis (if selfbot is in same server as the source it'll work)
+- Nitro stickers (see above)
 
 ### Murky areas
 - Of course, calls don't work. However, messages get sent if a call is started and ended

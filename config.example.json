@@ -3,6 +3,7 @@
     "prefix": "$fx",
     "cache_to_file": true,
     "debug_to_dms": true,
+    "has_nitro": false,
     "owner_id": "YOUR_USER_ID_HERE",
     "gc": {
         "1": "FIRST_GROUP_CHANNEL_ID",

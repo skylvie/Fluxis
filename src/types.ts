@@ -6,6 +6,7 @@ export interface Config {
     owner_id: string;
     cache_to_file: boolean;
     debug_to_dms: boolean;
+    has_nitro: boolean;
     gc: {
         1: string;
         2: string;
