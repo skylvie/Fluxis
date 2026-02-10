@@ -62,7 +62,7 @@ export async function forwardMessage(message: Message, otherGcId: string): Promi
                 replyToMessageId = forwardData[otherGcKey];
             }
         }
-        
+
         const isPoll = message.poll !== null && message.poll !== undefined;
         const isVoiceMessage = message.attachments.size > 0 && 
             message.attachments.first()?.contentType?.includes('audio/ogg');

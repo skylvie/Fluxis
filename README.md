@@ -28,7 +28,7 @@ config.json:
 ```
 
 ### Discord
-At the selfbot account to both GCs, and it just works! You could do it on your account as well but I don't recommend doing this because selfbots are against Discords ToS and you could be banned.
+At the selfbot account to both GCs, and it just works! You could do it on your account as well but I don't recommend doing this because selfbots are against Discords ToS and you could be banned. **MAKE SURE THE BOT OWNERS THE 2ND GC!!**
 
 ## Commands
 Using $fx as the prefix:
