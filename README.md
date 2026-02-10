@@ -47,6 +47,7 @@ $fx update - Checks for updates
 - Voice messages
 - Deleting & editing messages
 - Replies
+- Reactions
 - Pinning / unpinning
 - People being added/removed from a GC
 - Changing GC icon or name

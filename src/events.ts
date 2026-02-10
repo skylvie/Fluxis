@@ -1,5 +1,5 @@
 import type { MessageOptions } from './types';
-import type { Message, VoiceState, PartialMessage } from 'discord.js-selfbot-v13';
+import type { Message, VoiceState, PartialMessage, MessageReaction, User, PartialMessageReaction, PartialUser } from 'discord.js-selfbot-v13';
 import { client, lastSender, activeVoiceCalls } from './state';
 import { isOurGc,
     getOtherGcId,
@@ -13,7 +13,9 @@ import {
     deleteForwardedMessage, 
     updateForwardedMessage, 
     pinForwardedMessage, 
-    unpinForwardedMessage
+    unpinForwardedMessage,
+    addReactionToForwardedMessage,
+    removeReactionFromForwardedMessage
 } from './forwarding';
 import { loadCache, saveCache } from './cache';
 
@@ -23,6 +25,8 @@ export function setupEventHandlers(): void {
     client.on('messageDelete', onMessageDelete);
     client.on('messageUpdate', onMessageUpdate);
     client.on('voiceStateUpdate', onVoiceStateUpdate);
+    client.on('messageReactionAdd', onMessageReactionAdd);
+    client.on('messageReactionRemove', onMessageReactionRemove);
 }
 
 async function onReady(): Promise<void> {
@@ -223,5 +227,59 @@ async function onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState): P
                 saveCache();
             }, 1000);
         }
+    }
+}
+
+async function onMessageReactionAdd(
+    reaction: MessageReaction | PartialMessageReaction,
+    user: User | PartialUser
+): Promise<void> {
+    try {
+        if (user.id === client.user?.id) return;
+        
+        if (reaction.partial) {
+            try {
+                await reaction.fetch();
+            } catch {
+                return;
+            }
+        }
+        
+        const message = reaction.message;
+        if (!message.channelId || !isOurGc(message.channelId)) return;
+        
+        const emoji = reaction.emoji.id ? reaction.emoji.identifier : reaction.emoji.name;
+        if (!emoji) return;
+        
+        await addReactionToForwardedMessage(message.id, message.channelId, emoji);
+    } catch (err) {
+        console.error('Failed to handle reaction add:', err);
+    }
+}
+
+async function onMessageReactionRemove(
+    reaction: MessageReaction | PartialMessageReaction,
+    user: User | PartialUser
+): Promise<void> {
+    try {
+        if (user.id === client.user?.id) return;
+        
+        if (reaction.partial) {
+            try {
+                await reaction.fetch();
+            } catch {
+                return;
+            }
+        }
+        
+        const message = reaction.message;
+        if (!message.channelId || !isOurGc(message.channelId)) return;
+        
+        const emoji = reaction.emoji.id ? reaction.emoji.identifier : reaction.emoji.name;
+        if (!emoji) return;
+        
+        await removeReactionFromForwardedMessage(message.id, message.channelId, emoji);
+    } catch (err) {
+        console.error('Failed to handle reaction remove:', err);
     }
 }

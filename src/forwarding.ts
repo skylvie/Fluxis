@@ -315,3 +315,58 @@ export async function unpinForwardedMessage(message: Message): Promise<void> {
         console.error('Failed to unpin forwarded message:', err);
     }
 }
+
+export async function addReactionToForwardedMessage(messageId: string, channelId: string, emoji: string): Promise<void> {
+    try {
+        const messageData = forwardedMessages.get(messageId);
+        if (!messageData) return;
+        
+        const currentGcKey: GcKey = channelId === config.gc['1'] ? '1' : '2';
+        const otherGcKey: GcKey = currentGcKey === '1' ? '2' : '1';
+        const otherGcId = config.gc[otherGcKey];
+        
+        const otherMessageId = messageData[otherGcKey];
+        if (!otherMessageId) return;
+        
+        const otherChannel = await client.channels.fetch(otherGcId);
+        if (!otherChannel?.isText()) return;
+        
+        const messageToReact = await otherChannel.messages.fetch(otherMessageId);
+        await messageToReact.react(emoji);
+    } catch (err) {
+        console.error('Failed to add reaction to forwarded message:', err);
+    }
+}
+
+export async function removeReactionFromForwardedMessage(messageId: string, channelId: string, emoji: string): Promise<void> {
+    try {
+        const messageData = forwardedMessages.get(messageId);
+        if (!messageData) return;
+        
+        const currentGcKey: GcKey = channelId === config.gc['1'] ? '1' : '2';
+        const otherGcKey: GcKey = currentGcKey === '1' ? '2' : '1';
+        const otherGcId = config.gc[otherGcKey];
+        
+        const otherMessageId = messageData[otherGcKey];
+        if (!otherMessageId) return;
+        
+        const otherChannel = await client.channels.fetch(otherGcId);
+        if (!otherChannel?.isText()) return;
+        
+        const messageToReact = await otherChannel.messages.fetch(otherMessageId);
+        
+        const reactions = messageToReact.reactions.cache;
+        const reaction = reactions.find(r => {
+            if (r.emoji.id) {
+                return r.emoji.identifier === emoji || r.emoji.id === emoji;
+            }
+            return r.emoji.name === emoji;
+        });
+        
+        if (reaction) {
+            await reaction.users.remove(client.user?.id);
+        }
+    } catch (err) {
+        console.error('Failed to remove reaction from forwarded message:', err);
+    }
+}
