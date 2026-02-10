@@ -35,6 +35,7 @@ Using $fx as the prefix:
 $fx uptime - Shows uptime as Discord timestamp (anyone can use)
 $fx ping - Shows API and WS ping (anyone can use)
 $fx echo $MESSAGE - Sends $MESSAGE as bot in both GCs (owner only)
+$fx update - Checks for updates
 ```
 
 ## Support
