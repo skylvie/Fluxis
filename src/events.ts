@@ -13,8 +13,6 @@ export function setupEventHandlers(): void {
 
 async function onReady(): Promise<void> {
     console.log(`[DEBUG] Logged in as ${client.user?.tag}`);
-    
-    // Setup console DM forwarding if enabled
     consoleDmFwding();
     
     try {

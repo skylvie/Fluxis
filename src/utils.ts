@@ -60,31 +60,44 @@ export function getGcKey(channelId: string): GcKey | null {
     return null;
 }
 
+const ogConsole = {
+    log: console.log,
+    error: console.error,
+    warn: console.warn,
+    info: console.info
+};
+
 async function sendDmToOwner(message: string): Promise<void> {
     if (!config.debug_to_dms) return;
     
     try {
         const owner = await client.users.fetch(config.owner_id);
+        if (!owner) {
+            ogConsole.error('[ERROR] Failed to fetch owner user');
+            return;
+        }
+        
         const dmChannel = await owner.createDM();
+        if (!dmChannel) {
+            ogConsole.error('[ERROR] Failed to create DM channel');
+            return;
+        }
         
         const truncatedMessage = message.length > 1900 
             ? message.substring(0, 1900) + '...' 
             : message;
         
         await dmChannel.send(`\`\`\`\n${truncatedMessage}\n\`\`\``);
-    } catch { }
+    } catch (err) {
+        ogConsole.error('[ERROR] Failed to send DM:', err);
+    }
 }
 
 export function consoleDmFwding(): void {
     if (!config.debug_to_dms) return;
     
-    const originalLog = console.log;
-    const originalError = console.error;
-    const originalWarn = console.warn;
-    const originalInfo = console.info;
-    
     console.log = (...args: any[]) => {
-        originalLog(...args);
+        ogConsole.log(...args);
         const message = args.map(arg => 
             typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
         ).join(' ');
@@ -92,7 +105,7 @@ export function consoleDmFwding(): void {
     };
     
     console.error = (...args: any[]) => {
-        originalError(...args);
+        ogConsole.error(...args);
         const message = args.map(arg => 
             typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
         ).join(' ');
@@ -100,7 +113,7 @@ export function consoleDmFwding(): void {
     };
     
     console.warn = (...args: any[]) => {
-        originalWarn(...args);
+        ogConsole.warn(...args);
         const message = args.map(arg => 
             typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
         ).join(' ');
@@ -108,7 +121,7 @@ export function consoleDmFwding(): void {
     };
     
     console.info = (...args: any[]) => {
-        originalInfo(...args);
+        ogConsole.info(...args);
         const message = args.map(arg => 
             typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
         ).join(' ');
