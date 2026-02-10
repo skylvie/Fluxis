@@ -189,7 +189,7 @@ async function addCmd(message: Message): Promise<void> {
             return;
         }
         
-        await altGc.addMember(owner);
+        await altGc.setRecipient(owner);
         await message.reply('Successfully added you to the alt GC');
     } catch (err) {
         console.error('Failed to handle add command:', err);
@@ -232,7 +232,7 @@ async function rmCmd(message: Message, args: string[]): Promise<void> {
             return;
         }
         
-        await altGc.removeMember(targetUser);
+        await altGc.deleteRecipient(targetUser);
         
         if (targetUserId === config.owner_id) {
             await message.reply('Successfully removed you from the alt GC');
