@@ -1,0 +1,9 @@
+{
+    "token": "YOUR_DISCORD_TOKEN_HERE",
+    "prefix": "$fx",
+    "owner_id": "YOUR_USER_ID_HERE",
+    "gc": {
+        "1": "FIRST_GROUP_CHANNEL_ID",
+        "2": "SECOND_GROUP_CHANNEL_ID"
+    }
+}
