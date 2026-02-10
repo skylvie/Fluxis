@@ -28,46 +28,10 @@ export async function forwardMessage(message: Message, otherGcId: string): Promi
                 if (refChannel?.isText()) {
                     const referencedMsg = await refChannel.messages.fetch(message.reference.messageId);
                     const displayName = getDisplayName(message);
-                    const forwardHeader = `-# ${displayName} (<@${message.author.id}>) forwarded a message:`;          
-                    const messageOptions: MessageOptions = {};
-                    const largeAttachmentLinks: string[] = [];
-                    let forwardedContent = forwardHeader;
-
-                    if (referencedMsg.content) {
-                        forwardedContent += `\n${referencedMsg.content}`;
-                    }
+                    const forwardHeader = `-# ${displayName} (<@${message.author.id}>) forwarded a message:`;
                     
-                    messageOptions.content = forwardedContent;
-                    
-                    if (referencedMsg.attachments.size > 0) {
-                        const validAttachments = [];
-                        
-                        for (const attachment of referencedMsg.attachments.values()) {
-                            if (attachment.size > MAX_ATTACHMENT_SIZE) {
-                                largeAttachmentLinks.push(`[Attachment too large (${(attachment.size / (1024 * 1024)).toFixed(2)} MB)]: ${attachment.url}`);
-                            } else {
-                                validAttachments.push(attachment);
-                            }
-                        }
-                        
-                        if (validAttachments.length > 0) {
-                            messageOptions.files = validAttachments;
-                        }
-                    }
-                    
-                    if (largeAttachmentLinks.length > 0) {
-                        messageOptions.content += '\n' + largeAttachmentLinks.join('\n');
-                    }
-                    
-                    if (referencedMsg.embeds.length > 0) {
-                        messageOptions.embeds = referencedMsg.embeds;
-                    }
-                    
-                    if (referencedMsg.stickers.size > 0) {
-                        messageOptions.stickers = Array.from(referencedMsg.stickers.keys());
-                    }
-                    
-                    await otherChannel.send(messageOptions);
+                    await otherChannel.send(forwardHeader);
+                    await referencedMsg.forward(otherChannel);
                     lastSender.set(otherGcId, message.author.id);
                 }
             } catch (err) {
@@ -222,8 +186,14 @@ export async function deleteForwardedMessage(message: Message): Promise<void> {
         const otherChannel = await client.channels.fetch(otherGcId);
 
         if (otherChannel?.isText()) {
-            const messageToDelete = await otherChannel.messages.fetch(otherMessageId);
-            await messageToDelete.delete();
+            try {
+                const messageToDelete = await otherChannel.messages.fetch(otherMessageId);
+                await messageToDelete.delete();
+            } catch (err: any) {
+                if (err?.code !== 10008) {
+                    throw err;
+                }
+            }
             
             forwardedMessages.delete(message.id);
             forwardedMessages.delete(otherMessageId);
