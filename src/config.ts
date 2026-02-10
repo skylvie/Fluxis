@@ -1,16 +1,6 @@
-import * as fs from 'fs';
-import * as path from 'path';
-
-interface Config {
-    token: string;
-    prefix: string;
-    owner_id: string;
-    gc: {
-        1: string;
-        2: string;
-    };
-}
-
+import type { Config } from './types';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 const cfgPath = path.join(process.cwd(), 'config.json');
 
@@ -20,5 +10,4 @@ if (!fs.existsSync(cfgPath)) {
 }
 
 const raw = fs.readFileSync(cfgPath, 'utf-8');
-
 export const config: Config = JSON.parse(raw);
