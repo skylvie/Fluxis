@@ -16,10 +16,12 @@ pnpm start
 config.json:
 ```jsonc
 {
-    "token": "YOUR_DISCORD_TOKEN_HERE", // Discord token of the selfbot user you want to use
-    "prefix": "$fx",
+    "token": "YOUR_DISCORD_TOKEN_HERE", // Discord token of the Selfbot user you want to use
+    "prefix": "$fx", // Prefix used for commands. E.g. $fx uptime
+    "cache_to_file": true, // Cache needed content to a local file. Good if the Selfbot doesn't have perfect update
+    "has_nitro": false, // If the Selfbot user has Nitro
     "debug_to_dms": true, // Send all console calls to owners DMs
-    "owner_id": "YOUR_USER_ID_HERE", // Your user ID
+    "owner_id": "YOUR_USER_ID_HERE", // Your/owner user ID
     "gc": {
         "1": "FIRST_GROUP_CHANNEL_ID", // GC channel ID #1
         "2": "SECOND_GROUP_CHANNEL_ID" // GC channel ID #2
