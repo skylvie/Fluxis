@@ -40,4 +40,16 @@ $fx update - Checks for updates
 ```
 
 ## Support
-Fluxis works with **all** types of messages!
+- **ALL** types of messages
+- Forwards
+- Stickers
+- Attachments (videos, photos, etc.)
+- Voice messages
+- Deleting and editing messages
+- Replies
+
+### What doesn't work?
+TLDR: Nitro features (assuming the bot doesn't have Nitro, because you shouldn't waste $10/m on this)
+- If a file size is over 10MB, instead of re-uploading the attachment it'll psate the CDN link in the message instead
+- Nitro emojis
+- Nitro stickers
