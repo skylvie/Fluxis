@@ -283,7 +283,6 @@ export async function pinForwardedMessage(message: Message): Promise<void> {
         
         if (!messageToPin.pinned) {
             await messageToPin.pin();
-            console.log(`Pinned message ${otherMessageId} in ${otherGcId}`);
         }
     } catch (err) {
         console.error('Failed to pin forwarded message:', err);
@@ -309,7 +308,6 @@ export async function unpinForwardedMessage(message: Message): Promise<void> {
         
         if (messageToUnpin.pinned) {
             await messageToUnpin.unpin();
-            console.log(`Unpinned message ${otherMessageId} in ${otherGcId}`);
         }
     } catch (err) {
         console.error('Failed to unpin forwarded message:', err);

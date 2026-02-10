@@ -1,7 +1,8 @@
 import type { Message } from 'discord.js-selfbot-v13';
 import { config } from './config';
-import { client, startTime } from './state';
+import { client, startTime, setShuttingDown } from './state';
 import { sendToAllGcs } from './utils';
+import { saveCache, stopAutoSave } from './cache';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 
@@ -92,6 +93,60 @@ async function updateCmd(message: Message): Promise<void> {
     }
 }
 
+async function stopCmd(message: Message): Promise<void> {
+    if (message.author.id !== config.owner_id) {
+        try {
+            await message.reply('[ERROR] This command is owner only!');
+        } catch (err) {
+            console.error('Failed to send owner-only message:', err);
+        }
+        return;
+    }
+    
+    try {
+        setShuttingDown(true);
+        await message.reply('Stopping bot...');
+        
+        stopAutoSave();
+        saveCache();
+        console.log('[CACHE] Cache saved before stop');
+        
+        await sendToAllGcs('[SYSTEM] shutdown :(');
+        
+        client.destroy();
+        process.exit(0);
+    } catch (err) {
+        console.error('Failed to handle stop command:', err);
+    }
+}
+
+async function restartCmd(message: Message): Promise<void> {
+    if (message.author.id !== config.owner_id) {
+        try {
+            await message.reply('[ERROR] This command is owner only!');
+        } catch (err) {
+            console.error('Failed to send owner-only message:', err);
+        }
+        return;
+    }
+    
+    try {
+        setShuttingDown(true);
+        await message.reply('Restarting bot...');
+        
+        stopAutoSave();
+        saveCache();
+        console.log('[CACHE] Cache saved before restart');
+        
+        await sendToAllGcs('[SYSTEM] restarting...');
+        
+        client.destroy();
+        process.exit(0);
+    } catch (err) {
+        console.error('Failed to handle restart command:', err);
+    }
+}
+
 export async function handleCommand(message: Message): Promise<boolean> {
     if (!message.content.startsWith(config.prefix)) return false;
     
@@ -115,6 +170,14 @@ export async function handleCommand(message: Message): Promise<boolean> {
             break;
         case 'update':
             await updateCmd(message);
+            handled = true;
+            break;
+        case 'stop':
+            await stopCmd(message);
+            handled = true;
+            break;
+        case 'restart':
+            await restartCmd(message);
             handled = true;
             break;
         default:

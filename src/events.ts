@@ -81,7 +81,6 @@ async function onMessageUpdate(
     newMessage: Message | PartialMessage
 ): Promise<void> {
     if (!newMessage.channelId || !isOurGc(newMessage.channelId)) return;
-    if (newMessage.author?.id === client.user?.id) return;
 
     try {
         if (oldMessage.partial) {
@@ -105,6 +104,8 @@ async function onMessageUpdate(
             await unpinForwardedMessage(newMsg);
         }
     }
+
+    if (newMessage.author?.id === client.user?.id) return;
 
     await updateForwardedMessage(newMsg);
 }
