@@ -8,21 +8,6 @@ import { promisify } from 'node:util';
 
 const execAsync = promisify(exec);
 
-async function getAltGcChannel(): Promise<any> {
-    const gc1 = await client.channels.fetch(config.gc['1']);
-    const gc2 = await client.channels.fetch(config.gc['2']);
-    
-    if (gc1 && 'ownerId' in gc1 && gc1.ownerId === client.user?.id) {
-        return gc1;
-    }
-
-    if (gc2 && 'ownerId' in gc2 && gc2.ownerId === client.user?.id) {
-        return gc2;
-    }
-    
-    return null;
-}
-
 async function pingCmd(message: Message): Promise<void> {
     const wsPing = client.ws.ping;
     const apiPingStart = Date.now();
@@ -160,95 +145,6 @@ async function restartCmd(message: Message): Promise<void> {
     }
 }
 
-async function addCmd(message: Message): Promise<void> {
-    if (message.author.id !== config.owner_id) {
-        try {
-            await message.reply('[ERROR] This command is owner only!');
-        } catch (err) {
-            console.error('Failed to send owner-only message:', err);
-        }
-        return;
-    }
-    
-    try {
-        const altGc = await getAltGcChannel();
-        
-        if (!altGc) {
-            await message.reply('[ERROR] Could not find alt GC (bot must own one of the GCs)');
-            return;
-        }
-        
-        const owner = await client.users.fetch(config.owner_id);
-        if (!owner) {
-            await message.reply('[ERROR] Could not fetch owner user');
-            return;
-        }
-        
-        if (altGc.recipients.has(config.owner_id)) {
-            await message.reply('[ERROR] You are already in the alt GC');
-            return;
-        }
-        
-        await altGc.setRecipient(owner);
-        await message.reply('Successfully added you to the alt GC');
-    } catch (err) {
-        console.error('Failed to handle add command:', err);
-        try {
-            await message.reply(`[ERROR] Failed to add to alt GC: ${err}`);
-        } catch (replyErr) {
-            console.error('Failed to send error reply:', replyErr);
-        }
-    }
-}
-
-async function rmCmd(message: Message, args: string[]): Promise<void> {
-    if (message.author.id !== config.owner_id) {
-        try {
-            await message.reply('[ERROR] This command is owner only!');
-        } catch (err) {
-            console.error('Failed to send owner-only message:', err);
-        }
-        return;
-    }
-    
-    try {
-        const altGc = await getAltGcChannel();
-        
-        if (!altGc) {
-            await message.reply('[ERROR] Could not find alt GC (bot must own one of the GCs)');
-            return;
-        }
-        
-        let targetUserId = args[1] ? args[1].replace(/[<@!>]/g, '') : config.owner_id;
-        
-        if (!altGc.recipients.has(targetUserId)) {
-            await message.reply('[ERROR] That user is not in the alt GC');
-            return;
-        }
-        
-        const targetUser = await client.users.fetch(targetUserId);
-        if (!targetUser) {
-            await message.reply('[ERROR] Could not fetch target user');
-            return;
-        }
-        
-        await altGc.deleteRecipient(targetUser);
-        
-        if (targetUserId === config.owner_id) {
-            await message.reply('Successfully removed you from the alt GC');
-        } else {
-            await message.reply(`Successfully removed <@${targetUserId}> from the alt GC`);
-        }
-    } catch (err) {
-        console.error('Failed to handle rm command:', err);
-        try {
-            await message.reply(`[ERROR] Failed to remove from alt GC: ${err}`);
-        } catch (replyErr) {
-            console.error('Failed to send error reply:', replyErr);
-        }
-    }
-}
-
 export async function handleCommand(message: Message): Promise<boolean> {
     if (!message.content.startsWith(config.prefix)) return false;
     
@@ -280,14 +176,6 @@ export async function handleCommand(message: Message): Promise<boolean> {
             break;
         case 'restart':
             await restartCmd(message);
-            handled = true;
-            break;
-        case 'add':
-            await addCmd(message);
-            handled = true;
-            break;
-        case 'rm':
-            await rmCmd(message, args);
             handled = true;
             break;
         default:
