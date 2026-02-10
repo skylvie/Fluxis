@@ -24,8 +24,13 @@ async function onReady(): Promise<void> {
 }
 
 async function onMessageCreate(message: Message): Promise<void> {
-    if (!isOurGc(message.channelId)) return;
     if (message.author.id === client.user?.id) return;
+    
+
+    const isCommand = await handleCommand(message);
+    if (isCommand) return;
+    
+    if (!isOurGc(message.channelId)) return;
     
     const otherGcId = getOtherGcId(message.channelId);
     if (!otherGcId) return;
@@ -36,9 +41,6 @@ async function onMessageCreate(message: Message): Promise<void> {
         await handleSystemMessage(message);
         return;
     }
-
-    const isCommand = await handleCommand(message);
-    if (isCommand) return;
     
     await forwardMessage(message, otherGcId);
 }

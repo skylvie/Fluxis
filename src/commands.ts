@@ -98,20 +98,33 @@ export async function handleCommand(message: Message): Promise<boolean> {
     const args = message.content.slice(config.prefix.length).trim().split(/\s+/);
     const command = args[0].toLowerCase();
     
+    let handled = false;
+    
     switch (command) {
         case 'ping':
             await pingCmd(message);
-            return true;
+            handled = true;
+            break;
         case 'uptime':
             await uptimeCmd(message);
-            return true;
+            handled = true;
+            break;
         case 'echo':
             await echoCmd(message, args);
-            return true;
+            handled = true;
+            break;
         case 'update':
             await updateCmd(message);
-            return true;
+            handled = true;
+            break;
         default:
             return false;
     }
+    
+    if (handled) {
+        const authorName = message.author.displayName || message.author.username;
+        console.log(`[SYSTEM] ${authorName} <@${message.author.id}> used command: ${message.content}`);
+    }
+    
+    return handled;
 }
