@@ -17,7 +17,7 @@ async function pingCmd(message: Message): Promise<void> {
 
         await msg.edit(`Pong!\nWS ping: ${wsPing}ms\nAPI ping: ${apiPing}ms`);
     } catch (err) {
-        console.error('[ERROR] Failed to handle ping command:', err);
+        console.error('Failed to handle ping command:', err);
     }
 }
 
@@ -27,7 +27,7 @@ async function uptimeCmd(message: Message): Promise<void> {
     try {
         await message.reply(`The bot has been started since: <t:${timestamp}:R>`);
     } catch (err) {
-        console.error('[ERROR] Failed to handle uptime command:', err);
+        console.error('Failed to handle uptime command:', err);
     }
 }
 
@@ -36,7 +36,7 @@ async function echoCmd(message: Message, args: string[]): Promise<void> {
         try {
             await message.channel.send('[ERROR] This command is owner only!');
         } catch (err) {
-            console.error('[ERROR] Failed to send owner-only message:', err);
+            console.error('Failed to send owner-only message:', err);
         }
 
         return;
@@ -48,7 +48,7 @@ async function echoCmd(message: Message, args: string[]): Promise<void> {
         try {
             await message.channel.send(`Usage: \`${config.prefix} echo <message>\``);
         } catch (err) {
-            console.error('[ERROR] Failed to send usage message:', err);
+            console.error('Failed to send usage message:', err);
         }
 
         return;
@@ -62,7 +62,7 @@ async function updateCmd(message: Message): Promise<void> {
         try {
             await message.reply('[ERROR] This command is owner only!');
         } catch (err) {
-            console.error('[ERROR] Failed to send owner-only message:', err);
+            console.error('Failed to send owner-only message:', err);
         }
         return;
     }
@@ -80,14 +80,14 @@ async function updateCmd(message: Message): Promise<void> {
         await statusMsg.edit('Updates found! Updating...');
         await execAsync('pnpm build');
         
-        console.log('[INFO] Update complete, restarting...');
+        console.log('Update complete, restarting...');
         process.exit(0);
     } catch (err) {
-        console.error('[ERROR] Failed to handle update command:', err);
+        console.error('Failed to handle update command:', err);
         try {
             await message.reply(`[ERROR] Update failed: ${err}`);
         } catch (replyErr) {
-            console.error('[ERROR] Failed to send error reply:', replyErr);
+            console.error('Failed to send error reply:', replyErr);
         }
     }
 }
@@ -123,7 +123,7 @@ export async function handleCommand(message: Message): Promise<boolean> {
     
     if (handled) {
         const authorName = message.author.displayName || message.author.username;
-        console.log(`[SYSTEM] ${authorName} <@${message.author.id}> used command: ${message.content}`);
+        console.log(`${authorName} <@${message.author.id}> used command: ${message.content}`);
     }
     
     return handled;

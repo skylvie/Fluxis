@@ -1,25 +1,27 @@
 import type { MessageOptions } from './types';
-import type { Message, VoiceState } from 'discord.js-selfbot-v13';
+import type { Message, VoiceState, PartialMessage } from 'discord.js-selfbot-v13';
 import { client, lastSender, activeVoiceCalls } from './state';
 import { isOurGc, getOtherGcId, sendToOtherGc, sendToAllGcs, consoleDmFwding } from './utils';
 import { handleCommand } from './commands';
-import { forwardMessage } from './forwarding';
+import { forwardMessage, deleteForwardedMessage, updateForwardedMessage } from './forwarding';
 
 export function setupEventHandlers(): void {
     client.once('ready', onReady);
     client.on('messageCreate', onMessageCreate);
+    client.on('messageDelete', onMessageDelete);
+    client.on('messageUpdate', onMessageUpdate);
     client.on('voiceStateUpdate', onVoiceStateUpdate);
 }
 
 async function onReady(): Promise<void> {
-    console.log(`[DEBUG] Logged in as ${client.user?.tag}`);
+    console.log(`Logged in as ${client.user?.tag}`);
     consoleDmFwding();
     
     try {
         await sendToAllGcs('[SYSTEM] started!');
-        console.log('[DEBUG] Startup messages sent!');
+        console.log('Startup messages sent!');
     } catch (err) {
-        console.error('[ERROR] Failed to send startup messages:', err);
+        console.error('Failed to send startup messages:', err);
     }
 }
 
@@ -43,6 +45,42 @@ async function onMessageCreate(message: Message): Promise<void> {
     }
     
     await forwardMessage(message, otherGcId);
+}
+
+async function onMessageDelete(message: Message | PartialMessage): Promise<void> {
+    if (!message.channelId || !isOurGc(message.channelId)) return;
+    
+    if (message.partial) {
+        try {
+            await message.fetch();
+        } catch {
+            return;
+        }
+    }
+    
+    await deleteForwardedMessage(message as Message);
+}
+
+async function onMessageUpdate(
+    oldMessage: Message | PartialMessage,
+    newMessage: Message | PartialMessage
+): Promise<void> {
+    if (!newMessage.channelId || !isOurGc(newMessage.channelId)) return;  
+    if (newMessage.author?.id === client.user?.id) return;
+    
+    try {
+        if (oldMessage.partial) {
+            await oldMessage.fetch();
+        }
+        if (newMessage.partial) {
+            await newMessage.fetch();
+        }
+    } catch (err) {
+        console.error('Failed to fetch messages for update:', err);
+        return;
+    }
+    
+    await updateForwardedMessage(newMessage as Message);
 }
 
 async function handleSystemMessage(message: Message): Promise<void> {

@@ -4,10 +4,80 @@ import { config } from './config';
 import { client, forwardedMessages, lastSender } from './state';
 import { getDisplayName } from './utils';
 
+const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
+
 export async function forwardMessage(message: Message, otherGcId: string): Promise<void> {
     try {
         const otherChannel = await client.channels.fetch(otherGcId);
         if (!otherChannel?.isText()) return;
+        
+        const isForwardedMessage = message.reference?.messageId && 
+            !message.content && 
+            message.attachments.size === 0 && 
+            message.embeds.length === 0 &&
+            message.stickers.size === 0;
+        
+        if (isForwardedMessage) {
+            try {
+                if (!message.reference?.channelId || !message.reference?.messageId) {
+                    throw new Error('Missing reference data');
+                }
+                
+                const refChannel = await client.channels.fetch(message.reference.channelId);
+
+                if (refChannel?.isText()) {
+                    const referencedMsg = await refChannel.messages.fetch(message.reference.messageId);
+                    const displayName = getDisplayName(message);
+                    const forwardHeader = `-# ${displayName} (<@${message.author.id}>) forwarded a message:`;          
+                    const messageOptions: MessageOptions = {};
+                    const largeAttachmentLinks: string[] = [];
+                    let forwardedContent = forwardHeader;
+
+                    if (referencedMsg.content) {
+                        forwardedContent += `\n${referencedMsg.content}`;
+                    }
+                    
+                    messageOptions.content = forwardedContent;
+                    
+                    if (referencedMsg.attachments.size > 0) {
+                        const validAttachments = [];
+                        
+                        for (const attachment of referencedMsg.attachments.values()) {
+                            if (attachment.size > MAX_ATTACHMENT_SIZE) {
+                                largeAttachmentLinks.push(`[Attachment too large (${(attachment.size / (1024 * 1024)).toFixed(2)} MB)]: ${attachment.url}`);
+                            } else {
+                                validAttachments.push(attachment);
+                            }
+                        }
+                        
+                        if (validAttachments.length > 0) {
+                            messageOptions.files = validAttachments;
+                        }
+                    }
+                    
+                    if (largeAttachmentLinks.length > 0) {
+                        messageOptions.content += '\n' + largeAttachmentLinks.join('\n');
+                    }
+                    
+                    if (referencedMsg.embeds.length > 0) {
+                        messageOptions.embeds = referencedMsg.embeds;
+                    }
+                    
+                    if (referencedMsg.stickers.size > 0) {
+                        messageOptions.stickers = Array.from(referencedMsg.stickers.keys());
+                    }
+                    
+                    await otherChannel.send(messageOptions);
+                    lastSender.set(otherGcId, message.author.id);
+                }
+            } catch (err) {
+                const displayName = getDisplayName(message);
+                const systemMessage = `[SYSTEM] ${displayName} (<@${message.author.id}>) forwarded a message from another channel`;
+
+                await otherChannel.send(systemMessage);
+            }
+            return;
+        }
         
         const displayName = getDisplayName(message);
         const shouldShowHeader = lastSender.get(otherGcId) !== message.author.id;
@@ -65,6 +135,7 @@ export async function forwardMessage(message: Message, otherGcId: string): Promi
                 : message.content || '';
             
             const messageOptions: MessageOptions = {};
+            const largeAttachmentLinks: string[] = [];
             
             if (content) {
                 messageOptions.content = content;
@@ -75,7 +146,27 @@ export async function forwardMessage(message: Message, otherGcId: string): Promi
             }
             
             if (message.attachments.size > 0) {
-                messageOptions.files = Array.from(message.attachments.values());
+                const validAttachments = [];
+                
+                for (const attachment of message.attachments.values()) {
+                    if (attachment.size > MAX_ATTACHMENT_SIZE) {
+                        largeAttachmentLinks.push(`[Attachment too large (${(attachment.size / (1024 * 1024)).toFixed(2)} MB)]: ${attachment.url}`);
+                    } else {
+                        validAttachments.push(attachment);
+                    }
+                }
+                
+                if (validAttachments.length > 0) {
+                    messageOptions.files = validAttachments;
+                }
+            }
+            
+            if (largeAttachmentLinks.length > 0) {
+                const linkText = largeAttachmentLinks.join('\n');
+
+                messageOptions.content = messageOptions.content 
+                    ? `${messageOptions.content}\n${linkText}`
+                    : linkText;
             }
             
             if (message.embeds.length > 0) {
@@ -84,6 +175,16 @@ export async function forwardMessage(message: Message, otherGcId: string): Promi
             
             if (message.stickers.size > 0) {
                 messageOptions.stickers = Array.from(message.stickers.keys());
+            }
+            
+            const hasContent = messageOptions.content || 
+                (messageOptions.files && messageOptions.files.length > 0) ||
+                (messageOptions.embeds && messageOptions.embeds.length > 0) ||
+                (messageOptions.stickers && messageOptions.stickers.length > 0);
+            
+            if (!hasContent) {
+                console.warn('Skipping empty message forward from', message.channelId, 'to', otherGcId);
+                return;
             }
             
             sentMessage = await otherChannel.send(messageOptions);
@@ -102,6 +203,90 @@ export async function forwardMessage(message: Message, otherGcId: string): Promi
             forwardedMessages.set(sentMessage.id, messageData);
         }
     } catch (err) {
-        console.error('[ERROR] Failed to forward message from', message.channelId, 'to', otherGcId, ':', err);
+        console.error('Failed to forward message from', message.channelId, 'to', otherGcId, ':', err);
+    }
+}
+
+export async function deleteForwardedMessage(message: Message): Promise<void> {
+    try {
+        const messageData = forwardedMessages.get(message.id);
+        if (!messageData) return;
+        
+        const currentGcKey: GcKey = message.channelId === config.gc['1'] ? '1' : '2';
+        const otherGcKey: GcKey = currentGcKey === '1' ? '2' : '1';
+        const otherGcId = config.gc[otherGcKey];
+        
+        const otherMessageId = messageData[otherGcKey];
+        if (!otherMessageId) return;
+        
+        const otherChannel = await client.channels.fetch(otherGcId);
+
+        if (otherChannel?.isText()) {
+            const messageToDelete = await otherChannel.messages.fetch(otherMessageId);
+            await messageToDelete.delete();
+            
+            forwardedMessages.delete(message.id);
+            forwardedMessages.delete(otherMessageId);
+        }
+    } catch (err) {
+        console.error('Failed to delete forwarded message:', err);
+    }
+}
+
+export async function updateForwardedMessage(newMessage: Message): Promise<void> {
+    try {
+        const messageData = forwardedMessages.get(newMessage.id);
+        if (!messageData) return;
+        
+        const currentGcKey: GcKey = newMessage.channelId === config.gc['1'] ? '1' : '2';
+        const otherGcKey: GcKey = currentGcKey === '1' ? '2' : '1';
+        const otherGcId = config.gc[otherGcKey];
+        
+        const otherMessageId = messageData[otherGcKey];
+        if (!otherMessageId) return;
+        
+        const otherChannel = await client.channels.fetch(otherGcId);
+        if (!otherChannel?.isText()) return;
+        
+        const messageToEdit = await otherChannel.messages.fetch(otherMessageId);
+        
+        const displayName = getDisplayName(newMessage);
+        const originalContent = messageToEdit.content || '';
+        
+        const hasHeader = originalContent.startsWith('-#');
+        let newContent = '';
+        
+        if (hasHeader) {
+            const headerMatch = originalContent.match(/^-# .+? said:\n?/);
+            if (headerMatch) {
+                const header = headerMatch[0];
+                newContent = header + (newMessage.content || '');
+            } else {
+                newContent = `-# ${displayName} (<@${newMessage.author.id}>) said:\n${newMessage.content || ''}`;
+            }
+        } else {
+            newContent = newMessage.content || '';
+        }
+        
+        const largeAttachmentLinks: string[] = [];
+        const validAttachments = [];
+        
+        if (newMessage.attachments.size > 0) {
+            for (const attachment of newMessage.attachments.values()) {
+                if (attachment.size > MAX_ATTACHMENT_SIZE) {
+                    largeAttachmentLinks.push(`[Attachment too large (${(attachment.size / (1024 * 1024)).toFixed(2)} MB)]: ${attachment.url}`);
+                } else {
+                    validAttachments.push(attachment);
+                }
+            }
+        }
+        
+        if (largeAttachmentLinks.length > 0) {
+            newContent += '\n' + largeAttachmentLinks.join('\n');
+        }
+        
+        await messageToEdit.edit(newContent || ' ');
+    } catch (err) {
+        console.error('Failed to update forwarded message:', err);
     }
 }

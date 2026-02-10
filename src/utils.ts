@@ -29,7 +29,7 @@ export async function sendToAllGcs(content: string): Promise<void> {
         if (gc1?.isText()) await gc1.send(content);
         if (gc2?.isText()) await gc2.send(content);
     } catch (err) {
-        console.error('[ERROR] Failed to send to all GCs:', err);
+        console.error('Failed to send to all GCs:', err);
     }
 }
 
@@ -47,7 +47,7 @@ export async function sendToOtherGc(
             return await channel.send(content);
         }
     } catch (err) {
-        console.error('[ERROR] Failed to send to other GC:', err);
+        console.error('Failed to send to other GC:', err);
     }
     
     return null;
