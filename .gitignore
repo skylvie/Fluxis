@@ -1,6 +1,14 @@
 node_modules/
 dist/
+
 config.json
+
 cache.json
+.cache.json.bk
+cache.json.backup
+
 cache.db
+cache.db-shm
+cache.db-wal
+
 .DS_Store
