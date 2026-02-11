@@ -101,7 +101,7 @@ export function consoleDmFwding(): void {
         const message = args.map(arg => 
             typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
         ).join(' ');
-        sendDmToOwner(`[LOG] ${message}`).catch(() => {});
+        sendDmToOwner(`${message}`).catch(() => {});
     };
     
     console.error = (...args: any[]) => {

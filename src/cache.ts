@@ -92,9 +92,9 @@ function migrateFromJson(): void {
         
         migrate();
 
-        const backupPath = jsonCachePath + '.backup';
+        const backupPath = '.' + jsonCachePath + '.bk';
         fs.renameSync(jsonCachePath, backupPath);
-        console.log(`[Migration complete! Old cache backed up to ${path.basename(backupPath)}`);
+        console.log(`Migration complete! Old cache backed up to ${path.basename(backupPath)}`);
     } catch (err) {
         console.error('Failed to migrate from JSON:', err);
     }

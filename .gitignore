@@ -2,3 +2,5 @@ node_modules/
 dist/
 config.json
 cache.json
+cache.db
+.DS_Store
