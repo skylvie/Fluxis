@@ -1,31 +1,38 @@
-import { client, setShuttingDown } from './state';
-import { config } from './config';
-import { setupEventHandlers } from './events';
-import { sendToAllGcs } from './utils';
-import { saveCache, closeCache } from './cache';
+import { BridgeService } from "./bridge/bridge.service.js";
+import { config } from "./config/config.js";
+import { cleanup, client, setShuttingDown } from "./discord/client.js";
+import { setupEventHandlers } from "./discord/events.js";
 
 setupEventHandlers();
 
-process.on('SIGINT', async () => {
+const bridge = new BridgeService(client);
+
+process.on("SIGINT", async () => {
     setShuttingDown(true);
-    console.log('Shutting down...');
+    console.log("Shutting down...");
 
+    cleanup();
 
-    saveCache();
-    closeCache();
-    console.log('Cache saved and closed on shutdown');
-    
     try {
-        await sendToAllGcs('[SYSTEM] shutdown :(');
+        await bridge.sendToAllChannels("[SYSTEM] shutdown :(");
     } catch (err) {
-        console.error('Failed to send shutdown messages:', err);
+        console.error("Failed to send shutdown messages:", err);
     }
-    
+
     client.destroy();
     process.exit(0);
 });
 
-client.login(config.token).catch(err => {
-    console.error('Failed to login:', err);
+process.on("unhandledRejection", (reason, promise) => {
+    console.error("Unhandled rejection at:", promise, "reason:", reason);
+});
+
+process.on("uncaughtException", (err) => {
+    console.error("Uncaught exception:", err);
+    process.exit(1);
+});
+
+client.login(config.token).catch((err) => {
+    console.error("Failed to login:", err);
     process.exit(1);
 });
