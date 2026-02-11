@@ -18,8 +18,11 @@ export class BridgeService {
         try {
             const channel = await this.client.channels.fetch(channelId);
             return channel?.isText() ? (channel as TextChannel) : null;
-        } catch (err) {
-            console.error(`Failed to fetch channel ${channelId}:`, err);
+        } catch (err: any) {
+            // Suppress "Missing Access" errors - these are expected when forwarding from inaccessible channels
+            if (err?.code !== 50001) {
+                console.error(`Failed to fetch channel ${channelId}:`, err);
+            }
             return null;
         }
     }
@@ -84,21 +87,51 @@ export class BridgeService {
             }
 
             const refChannel = await this.getChannel(message.reference.channelId);
-            if (!refChannel) throw new Error("Reference channel not found");
+            if (!refChannel) {
+                const displayName = getDisplayName(message);
+
+                await targetChannel.send(
+                    `[SYSTEM] ${displayName} (<@${message.author.id}>) forwarded a message from an inaccessible channel`
+                );
+
+                return;
+            }
 
             const referencedMsg = await refChannel.messages.fetch(message.reference.messageId);
             const displayName = getDisplayName(message);
+            const originalAuthor = getDisplayName(referencedMsg);
+            const options: MessageOptions = {
+                content: `-# ${displayName} (<@${message.author.id}>) forwarded a message from ${originalAuthor}:`,
+            };
 
-            await targetChannel.send(
-                `-# ${displayName} (<@${message.author.id}>) forwarded a message:`
+            if (referencedMsg.content) {
+                options.content += `\n${referencedMsg.content}`;
+            }
+            if (referencedMsg.attachments.size > 0) {
+                options.files = Array.from(referencedMsg.attachments.values());
+            }
+            if (referencedMsg.embeds.length > 0) {
+                options.embeds = referencedMsg.embeds;
+            }
+            if (referencedMsg.stickers.size > 0) {
+                options.stickers = Array.from(referencedMsg.stickers.keys());
+            }
+
+            const sent = await targetChannel.send(options);
+
+            messageMapper.saveMapping(
+                message.id,
+                sent.id,
+                context.sourceGcKey,
+                context.targetGcKey
             );
-            await referencedMsg.forward(targetChannel);
-
             messageMapper.setLastSender(context.targetChannelId, message.author.id);
-        } catch {
+        } catch (err) {
+            console.error("Unexpected error in handleForwardedMessage:", err);
+
             const displayName = getDisplayName(message);
             await targetChannel.send(
-                `[SYSTEM] ${displayName} (<@${message.author.id}>) forwarded a message from another channel`
+                `[SYSTEM] ${displayName} (<@${message.author.id}>) forwarded a message (error occurred)`
             );
         }
     }
@@ -112,8 +145,8 @@ export class BridgeService {
         const options: MessageOptions = {
             content: `[SYSTEM] ${displayName} (<@${message.author.id}>) created a poll in the other GC`,
         };
-
         const replyId = this.getReplyTarget(message, context);
+
         if (replyId) {
             options.reply = { messageReference: replyId };
         }
