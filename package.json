@@ -11,10 +11,12 @@
     "license": "MIT",
     "packageManager": "pnpm@10.28.1",
     "devDependencies": {
+        "@types/better-sqlite3": "^7.6.13",
         "@types/node": "^25.2.2",
         "typescript": "^5.9.3"
     },
     "dependencies": {
+        "better-sqlite3": "^12.6.2",
         "debug": "^4.4.3",
         "discord.js-selfbot-v13": "^3.7.1"
     }

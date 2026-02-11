@@ -3,7 +3,11 @@ import type { Message } from 'discord.js-selfbot-v13';
 import { config } from './config';
 import { client, forwardedMessages, lastSender } from './state';
 import { getDisplayName } from './utils';
-import { saveCache } from './cache';
+import { 
+    saveForwardedMessage, 
+    saveLastSender, 
+    deleteForwardedMessage as deleteCachedMessage
+} from './cache';
 
 const MAX_ATTACHMENT_SIZE = config.has_nitro ? 500 * 1024 * 1024 : 10 * 1024 * 1024;
 
@@ -34,7 +38,7 @@ export async function forwardMessage(message: Message, otherGcId: string): Promi
                     await otherChannel.send(forwardHeader);
                     await referencedMsg.forward(otherChannel);
                     lastSender.set(otherGcId, message.author.id);
-                    saveCache();
+                    saveLastSender(otherGcId, message.author.id);
                 }
             } catch (err) {
                 const displayName = getDisplayName(message);
@@ -50,7 +54,7 @@ export async function forwardMessage(message: Message, otherGcId: string): Promi
         const headerText = shouldShowHeader ? `-# ${displayName} (<@${message.author.id}>) said:` : '';
         
         lastSender.set(otherGcId, message.author.id);
-        saveCache();
+        saveLastSender(otherGcId, message.author.id);
         
         let replyToMessageId: string | undefined;
 
@@ -168,7 +172,8 @@ export async function forwardMessage(message: Message, otherGcId: string): Promi
             
             forwardedMessages.set(message.id, messageData);
             forwardedMessages.set(sentMessage.id, messageData);
-            saveCache();
+            saveForwardedMessage(message.id, messageData);
+            saveForwardedMessage(sentMessage.id, messageData);
         }
     } catch (err) {
         console.error('Failed to forward message from', message.channelId, 'to', otherGcId, ':', err);
@@ -201,7 +206,8 @@ export async function deleteForwardedMessage(message: Message): Promise<void> {
             
             forwardedMessages.delete(message.id);
             forwardedMessages.delete(otherMessageId);
-            saveCache();
+            deleteCachedMessage(message.id);
+            deleteCachedMessage(otherMessageId);
         }
     } catch (err) {
         console.error('Failed to delete forwarded message:', err);

@@ -1,7 +1,16 @@
 import type { MessageOptions } from './types';
-import type { Message, VoiceState, PartialMessage, MessageReaction, User, PartialMessageReaction, PartialUser } from 'discord.js-selfbot-v13';
+import type {
+    Message,
+    VoiceState,
+    PartialMessage,
+    MessageReaction,
+    User,
+    PartialMessageReaction,
+    PartialUser
+} from 'discord.js-selfbot-v13';
 import { client, lastSender, activeVoiceCalls } from './state';
-import { isOurGc,
+import {
+    isOurGc,
     getOtherGcId,
     sendToOtherGc,
     sendToAllGcs,
@@ -17,7 +26,11 @@ import {
     addReactionToForwardedMessage,
     removeReactionFromForwardedMessage
 } from './forwarding';
-import { loadCache, saveCache } from './cache';
+import { loadCache,
+    deleteLastSender,
+    saveActiveVoiceCall,
+    deleteActiveVoiceCall
+} from './cache';
 
 export function setupEventHandlers(): void {
     client.once('ready', onReady);
@@ -56,7 +69,7 @@ async function onMessageCreate(message: Message): Promise<void> {
     if (!otherGcId) return;
 
     lastSender.delete(message.channelId);
-    saveCache();
+    deleteLastSender(message.channelId);
 
     if (message.type !== 'DEFAULT' && message.type !== 'REPLY') {
         await handleSystemMessage(message);
@@ -178,7 +191,7 @@ async function handleSystemMessage(message: Message): Promise<void> {
                 const sentMessage = await sendToOtherGc(message.channelId, systemMessage);
                 if (sentMessage) {
                     activeVoiceCalls.set(message.channelId, sentMessage.id);
-                    saveCache();
+                    saveActiveVoiceCall(message.channelId, sentMessage.id);
                 }
 
                 return;
@@ -188,7 +201,7 @@ async function handleSystemMessage(message: Message): Promise<void> {
             await sendToOtherGc(message.channelId, systemMessage);
         }
     } catch (err) {
-        console.error('[ERROR] Failed to handle system message:', err);
+        console.error('Failed to handle system message:', err);
     }
 }
 
@@ -219,12 +232,12 @@ async function onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState): P
                             await otherChannel.send(replyOptions);
                         }
                     } catch (err) {
-                        console.error('[ERROR] Failed to send VC ended message:', err);
+                        console.error('Failed to send VC ended message:', err);
                     }
                 }
 
                 activeVoiceCalls.delete(channelId);
-                saveCache();
+                deleteActiveVoiceCall(channelId);
             }, 1000);
         }
     }

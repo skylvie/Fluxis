@@ -35,7 +35,7 @@ async function uptimeCmd(message: Message): Promise<void> {
 async function echoCmd(message: Message, args: string[]): Promise<void> {
     if (message.author.id !== config.owner_id) {
         try {
-            await message.channel.send('[ERROR] This command is owner only!');
+            await message.channel.send('This command is owner only!');
         } catch (err) {
             console.error('Failed to send owner-only message:', err);
         }
@@ -61,7 +61,7 @@ async function echoCmd(message: Message, args: string[]): Promise<void> {
 async function updateCmd(message: Message): Promise<void> {
     if (message.author.id !== config.owner_id) {
         try {
-            await message.reply('[ERROR] This command is owner only!');
+            await message.reply('This command is owner only!');
         } catch (err) {
             console.error('Failed to send owner-only message:', err);
         }
@@ -86,7 +86,7 @@ async function updateCmd(message: Message): Promise<void> {
     } catch (err) {
         console.error('Failed to handle update command:', err);
         try {
-            await message.reply(`[ERROR] Update failed: ${err}`);
+            await message.reply(`Update failed: ${err}`);
         } catch (replyErr) {
             console.error('Failed to send error reply:', replyErr);
         }
@@ -96,7 +96,7 @@ async function updateCmd(message: Message): Promise<void> {
 async function stopCmd(message: Message): Promise<void> {
     if (message.author.id !== config.owner_id) {
         try {
-            await message.reply('[ERROR] This command is owner only!');
+            await message.reply('This command is owner only!');
         } catch (err) {
             console.error('Failed to send owner-only message:', err);
         }
@@ -108,7 +108,7 @@ async function stopCmd(message: Message): Promise<void> {
         await message.reply('Stopping bot...');
         
         saveCache();
-        console.log('[CACHE] Cache saved before stop');
+        console.log('Cache saved before stop');
         
         await sendToAllGcs('[SYSTEM] shutdown :(');
         
@@ -122,7 +122,7 @@ async function stopCmd(message: Message): Promise<void> {
 async function restartCmd(message: Message): Promise<void> {
     if (message.author.id !== config.owner_id) {
         try {
-            await message.reply('[ERROR] This command is owner only!');
+            await message.reply('This command is owner only!');
         } catch (err) {
             console.error('Failed to send owner-only message:', err);
         }
@@ -134,7 +134,7 @@ async function restartCmd(message: Message): Promise<void> {
         await message.reply('Restarting bot...');
         
         saveCache();
-        console.log('[CACHE] Cache saved before restart');
+        console.log('Cache saved before restart');
         
         await sendToAllGcs('[SYSTEM] restarting...');
         

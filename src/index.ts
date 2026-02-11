@@ -2,22 +2,23 @@ import { client, setShuttingDown } from './state';
 import { config } from './config';
 import { setupEventHandlers } from './events';
 import { sendToAllGcs } from './utils';
-import { saveCache } from './cache';
+import { saveCache, closeCache } from './cache';
 
 setupEventHandlers();
 
 process.on('SIGINT', async () => {
     setShuttingDown(true);
-    console.log('[DEBUG] Shutting down...');
+    console.log('Shutting down...');
 
 
     saveCache();
-    console.log('Cache saved on shutdown');
+    closeCache();
+    console.log('Cache saved and closed on shutdown');
     
     try {
         await sendToAllGcs('[SYSTEM] shutdown :(');
     } catch (err) {
-        console.error('[ERROR] Failed to send shutdown messages:', err);
+        console.error('Failed to send shutdown messages:', err);
     }
     
     client.destroy();
@@ -25,6 +26,6 @@ process.on('SIGINT', async () => {
 });
 
 client.login(config.token).catch(err => {
-    console.error('[ERROR] Failed to login:', err);
+    console.error('Failed to login:', err);
     process.exit(1);
 });

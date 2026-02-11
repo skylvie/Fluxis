@@ -73,13 +73,13 @@ async function sendDmToOwner(message: string): Promise<void> {
     try {
         const owner = await client.users.fetch(config.owner_id);
         if (!owner) {
-            ogConsole.error('[ERROR] Failed to fetch owner user');
+            ogConsole.error('Failed to fetch owner user');
             return;
         }
         
         const dmChannel = await owner.createDM();
         if (!dmChannel) {
-            ogConsole.error('[ERROR] Failed to create DM channel');
+            ogConsole.error('Failed to create DM channel');
             return;
         }
         
@@ -89,7 +89,7 @@ async function sendDmToOwner(message: string): Promise<void> {
         
         await dmChannel.send(`\`\`\`\n${truncatedMessage}\n\`\`\``);
     } catch (err) {
-        ogConsole.error('[ERROR] Failed to send DM:', err);
+        ogConsole.error('Failed to send DM:', err);
     }
 }
 
@@ -109,7 +109,7 @@ export function consoleDmFwding(): void {
         const message = args.map(arg => 
             typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
         ).join(' ');
-        sendDmToOwner(`[ERROR] ${message}`).catch(() => {});
+        sendDmToOwner(`${message}`).catch(() => {});
     };
     
     console.warn = (...args: any[]) => {
