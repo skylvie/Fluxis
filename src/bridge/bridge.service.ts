@@ -82,24 +82,9 @@ export class BridgeService {
         context: BridgeContext
     ): Promise<void> {
         try {
-            if (!message.reference?.channelId || !message.reference?.messageId) {
-                throw new Error("Missing reference data");
-            }
-
-            const refChannel = await this.getChannel(message.reference.channelId);
-            if (!refChannel) {
-                const displayName = getDisplayName(message);
-
-                await targetChannel.send(
-                    `[SYSTEM] ${displayName} (<@${message.author.id}>) forwarded a message from an inaccessible channel`
-                );
-
-                return;
-            }
-
-            const referencedMsg = await refChannel.messages.fetch(message.reference.messageId);
+            // do not care abt references, forwards are never replies
             const displayName = getDisplayName(message);
-            const originalAuthor = getDisplayName(referencedMsg);
+            const originalAuthor = getDisplayName(message);
             const options: MessageOptions = {
                 content: `-# ${displayName} (<@${message.author.id}>) forwarded a message from ${originalAuthor}:`,
             };
