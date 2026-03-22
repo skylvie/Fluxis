@@ -3,6 +3,7 @@ Fluxis is a Discord selfbot that can be used to extend GDMs.
 
 > [!WARNING]
 > Fluxis uses Discord selfbots, which are against Discord's ToS! I am not liable if your account gets banned.
+> This project is no longer maintained.
 
 ## Setup
 ```sh
